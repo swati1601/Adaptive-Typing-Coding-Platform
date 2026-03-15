@@ -1,5 +1,4 @@
-# Adaptive-Typing-Coding-Platform
-Adaptive Skill Assessment and Performance Prediction Platform
+# Adaptive Typing and Coding Platform
 
 ## Project Overview
 The Adaptive Typing and Coding Platform is a web-based system designed to help users improve their typing speed and programming skills. 
