@@ -2,9 +2,7 @@
 import json
 import random
 
-# =========================
-# TYPING QUESTIONS
-# =========================
+
 
 typing_easy = []
 typing_medium = []
@@ -51,9 +49,7 @@ typing_data = {
     "hard": typing_hard
 }
 
-# =========================
-# CODING QUESTIONS
-# =========================
+#coding questions
 
 coding_data = {
 
@@ -130,10 +126,7 @@ coding_data = {
         ]
     }
 }
-
-# =========================
-# SAVE FILES
-# =========================
+#save file
 
 with open("typing_questions.json", "w") as f:
     json.dump(typing_data, f, indent=4)
@@ -141,5 +134,5 @@ with open("typing_questions.json", "w") as f:
 with open("coding_questions.json", "w") as f:
     json.dump(coding_data, f, indent=4)
 
-print("✅ Questions generated successfully!")
+print("Questions generated successfully!")
 
