@@ -1,8 +1,6 @@
 let currentAnswer = "";
 
-// ========================
-// LOAD QUESTIONS
-// ========================
+//load questions
 
 function loadQuestions() {
   let lang = document.getElementById("languageSelect").value;
@@ -52,9 +50,7 @@ function loadQuestions() {
     });
 }
 
-// ========================
-// CHECK CODE
-// ========================
+// check code
 
 function checkCode() {
   let code = document.getElementById("code").value.trim();
@@ -88,9 +84,7 @@ function checkCode() {
     });
 }
 
-// ========================
-// LANGUAGE CHANGE
-// ========================
+//language change
 
 document
   .getElementById("languageSelect")
@@ -98,9 +92,7 @@ document
     loadQuestions();
   });
 
-// ========================
-// PAGE LOAD
-// ========================
+//page load
 
 window.onload = function () {
   loadQuestions();
