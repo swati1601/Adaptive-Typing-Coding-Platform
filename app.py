@@ -4,18 +4,14 @@ import json
 
 app = Flask(__name__)
 
-# -------------------------
-# LEVELS
-# -------------------------
 
+#levels
 levels = ["easy", "medium", "hard"]
 
 typing_level_index = 0
 coding_level_index = 0
 
-# -------------------------
-# LOAD JSON FILES
-# -------------------------
+#load json files
 
 with open("typing_questions.json") as f:
     typing_data = json.load(f)
@@ -23,9 +19,7 @@ with open("typing_questions.json") as f:
 with open("coding_questions.json") as f:
     coding_questions = json.load(f)
 
-# -------------------------
-# TRACK USED QUESTIONS
-# -------------------------
+# track used questions
 
 used_texts = {
     "easy": set(),
@@ -39,25 +33,18 @@ used_questions = {
     "hard": set()
 }
 
-# -------------------------
-# HOME
-# -------------------------
-
+#home
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# -------------------------
-# TYPING PAGE
-# -------------------------
+#typing page
 
 @app.route('/typing')
 def typing():
     return render_template('typing.html')
 
-# -------------------------
-# GET TYPING TEXT
-# -------------------------
+# get typing text
 
 @app.route('/get_text')
 def get_text():
@@ -86,9 +73,7 @@ def get_text():
         "level": level
     })
 
-# -------------------------
-# UPDATE TYPING LEVEL
-# -------------------------
+# update typing level
 
 @app.route('/update_typing', methods=['POST'])
 def update_typing():
@@ -113,17 +98,13 @@ def update_typing():
         "level": levels[typing_level_index]
     })
 
-# -------------------------
-# CODING PAGE
-# -------------------------
+#coding page
 
 @app.route('/coding')
 def coding():
     return render_template('coding.html')
 
-# -------------------------
-# LOAD QUESTIONS
-# -------------------------
+# load questions
 
 @app.route('/all_questions')
 def all_questions():
@@ -141,9 +122,7 @@ def all_questions():
         "level": level
     })
 
-# -------------------------
-# CHECK CODE
-# -------------------------
+# check code
 @app.route('/check_code', methods=['POST'])
 def check_code():
     global coding_level_index
@@ -153,7 +132,7 @@ def check_code():
     user_code = data.get('code', '')
     answer = data.get('answer', '')
 
-    # DEBUG PRINTS
+    #print
     print("USER CODE:", user_code)
     print("ANSWER:", answer)
     print("LEVEL INDEX:", coding_level_index)
@@ -173,7 +152,7 @@ def check_code():
         "result": result,
         "level": levels[coding_level_index]
     })
-# -------------------------
+
 
 if __name__ == '__main__':
     app.run(debug=True)
