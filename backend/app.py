@@ -49,6 +49,11 @@ LEVELS = ["easy", "medium", "hard"]
 # Track which questions have been served per user (in-memory)
 _user_used_questions: dict = {}
 
+# ── Load Typing Sentences ───────────────────────────────────────────────────
+TYPING_PATH = os.path.join(DATA_DIR, "typing_questions.json")
+with open(TYPING_PATH) as f:
+    TYPING_SENTENCES = json.load(f)
+
 
 # ── User Model for Flask-Login ────────────────────────────────────────────────
 class User(UserMixin):
@@ -243,6 +248,12 @@ def coding():
     return render_template("coding.html")
 
 
+@app.route("/typing")
+@login_required
+def typing():
+    return render_template("typing.html")
+
+
 @app.route("/api/next_question")
 @login_required
 def next_question():
@@ -354,6 +365,36 @@ def submit_code():
         "passed_tests":  passed_tests,
         "total_tests":   total_tests,
         "runtime_error": runtime_error,
+    })
+
+
+# ── Typing Engine ─────────────────────────────────────────────────────────────
+
+@app.route("/get_text")
+@login_required
+def get_text():
+    progress = db.get_progress(current_user.id)
+    level = progress["current_level"]
+    pool = TYPING_SENTENCES.get(level, ["The quick brown fox jumps over the lazy dog."])
+    text = random.choice(pool)
+    return jsonify({"text": text, "level": level})
+
+
+@app.route("/update_typing", methods=["POST"])
+@login_required
+def update_typing():
+    data = request.json
+    accuracy = data.get("accuracy", 0)
+    correct = accuracy > 90
+    xp_earned = 5 if correct else 1
+
+    new_level = db.update_progress(current_user.id, correct, xp_earned)
+    progress = db.get_progress(current_user.id)
+
+    return jsonify({
+        "status": "success",
+        "level": new_level or progress["current_level"],
+        "xp": progress["xp"]
     })
 
 
