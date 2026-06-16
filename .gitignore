@@ -3,9 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.pyo
-*.egg-info/
-dist/
-build/
+*.egg-info
 *.egg
 
 # ── Virtual Environments ──────────────────────────────────────────────────────
@@ -16,26 +14,12 @@ venv2/
 
 # ── Environment Variables ──────────────────────────────────────────────────────
 
-# ── Database ───────────────────────────────────────────────────────────────────
-database.db
-*.db
-*.sqlite3
+
 
 # ── IDE / Editor ──────────────────────────────────────────────────────────────
 .vscode/
-.idea/
 *.swp
 *.swo
 *~
-.project
-.classpath
-.settings/
 
-# ── OS ────────────────────────────────────────────────────────────────────────
-.DS_Store
-Thumbs.db
-*.log
 
-# ── Project specific ──────────────────────────────────────────────────────────
-static/
-.qoder/
