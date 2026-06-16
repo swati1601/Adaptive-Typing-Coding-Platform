@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard - CodeArena{% endblock %}
+
+{% block content %}
+<section class="leaderboard-section">
+    <div class="section-container">
+        <h1 class="page-title">Global Leaderboard</h1>
+        <p class="page-subtitle">Top coders ranked by XP</p>
+
+        <div class="leaderboard-card">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Coder</th>
+                        <th>Level</th>
+                        <th>XP</th>
+                        <th>Solved</th>
+                        <th>Accuracy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in leaderboard %}
+                    <tr class="{{ 'top-3' if loop.index <= 3 }}">
+                        <td>
+                            <span class="rank-badge rank-{{ loop.index }}">
+                                {% if loop.index == 1 %}&#129351;
+                                {% elif loop.index == 2 %}&#129352;
+                                {% elif loop.index == 3 %}&#129353;
+                                {% else %}{{ loop.index }}{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/profile/{{ user.username }}" class="coder-link">
+                                <span class="coder-avatar">{{ user.username[0] | upper }}</span>
+                                {{ user.username }}
+                            </a>
+                        </td>
+                        <td><span class="badge badge-{{ user.current_level }}">{{ user.current_level | capitalize }}</span></td>
+                        <td><strong>{{ user.xp }}</strong></td>
+                        <td>{{ user.questions_solved }}</td>
+                        <td>{{ user.accuracy }}%</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not leaderboard %}
+                    <tr><td colspan="6" class="no-data">No coders yet. Be the first to join!</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
