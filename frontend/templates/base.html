@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CodeArena{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">&#9889;</span> CodeArena
+            </a>
+            <div class="nav-links">
+                {% if current_user.is_authenticated %}
+                    <a href="/coding" class="nav-link">Practice</a>
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/leaderboard" class="nav-link">Leaderboard</a>
+                    <a href="/compare" class="nav-link">Compare</a>
+                    <a href="/profile/{{ current_user.username }}" class="nav-link">Profile</a>
+                    <div class="nav-user">
+                        <span class="user-badge">{{ current_user.username }}</span>
+                        <a href="/logout" class="nav-link logout-link">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/register" class="nav-link btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+            <button class="nav-toggle" onclick="toggleNav()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 CodeArena &mdash; Adaptive Coding Platform</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleNav() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        }
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.flash').forEach(f => f.style.opacity = '0');
+        }, 4000);
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

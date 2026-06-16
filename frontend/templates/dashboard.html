@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - CodeArena{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="section-container">
+        <div class="dashboard-header">
+            <h1>Welcome back, <span class="gradient-text">{{ user.username }}</span>!</h1>
+            <p>Here's your coding progress overview</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">&#127942;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ progress.xp }}</span>
+                    <span class="stat-label">Total XP</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">&#128293;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ progress.streak }}</span>
+                    <span class="stat-label">Current Streak</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">&#128221;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ progress.questions_solved }}</span>
+                    <span class="stat-label">Problems Solved</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">&#127919;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ accuracy }}%</span>
+                    <span class="stat-label">Accuracy</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">&#9889;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ progress.current_level | capitalize }}</span>
+                    <span class="stat-label">Current Level</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">&#128200;</div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ progress.correct_count }}/{{ progress.correct_count + progress.wrong_count }}</span>
+                    <span class="stat-label">Correct / Total</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="dashboard-grid">
+            <!-- Recent Submissions -->
+            <div class="dash-card">
+                <h2>Recent Submissions</h2>
+                <div class="table-wrap">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Result</th>
+                                <th>Language</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in recent %}
+                            <tr>
+                                <td>{{ sub.question_text }}</td>
+                                <td>
+                                    <span class="badge {{ 'badge-correct' if sub.correct == 1 or sub.correct == True else 'badge-wrong' }}">
+                                        {{ 'Accepted' if sub.correct == 1 or sub.correct == True else 'Wrong' }}
+                                    </span>
+                                </td>
+                                <td>{{ sub.language | capitalize }}</td>
+                                <td>{{ sub.time_taken_sec | round(1) }}s</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not recent %}
+                            <tr><td colspan="4" class="no-data">No submissions yet. Start practicing!</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Skill Breakdown -->
+            <div class="dash-card">
+                <h2>Skill Breakdown</h2>
+                <div class="skills-list">
+                    {% for skill in skills %}
+                    <div class="skill-item">
+                        <div class="skill-header">
+                            <span class="skill-name">{{ skill.skill_name | replace('_', ' ') | title }}</span>
+                            <span class="skill-score">{{ skill.score }} pts</span>
+                        </div>
+                        <div class="skill-bar">
+                            {% set pct = [skill.score / 2, 100] | min %}
+                            <div class="skill-bar-fill" style="width: {{ pct }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not skills %}
+                        <p class="no-data">No skills tracked yet. Solve some problems!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Level History -->
+            <div class="dash-card full-width">
+                <h2>Level Progression</h2>
+                <div class="level-timeline">
+                    {% for entry in level_history %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <span class="badge badge-{{ entry.old_level }}">{{ entry.old_level | capitalize }}</span>
+                            <span class="arrow">&#8594;</span>
+                            <span class="badge badge-{{ entry.new_level }}">{{ entry.new_level | capitalize }}</span>
+                            <span class="timeline-date">{{ entry.changed_at }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not level_history %}
+                        <p class="no-data">No level changes yet. Keep solving to level up!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-cta">
+            <a href="/coding" class="btn btn-primary btn-lg">Continue Practicing &#8594;</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
