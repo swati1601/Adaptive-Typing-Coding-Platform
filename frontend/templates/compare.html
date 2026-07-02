@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Compare Profiles - CodeArena{% endblock %}
+
+{% block content %}
+<section class="compare-section">
+    <div class="section-container">
+        <h1 class="page-title">Compare Coders</h1>
+        <p class="page-subtitle">See how two coders stack up against each other</p>
+
+        <form method="GET" action="/compare" class="compare-form">
+            <div class="compare-selects">
+                <div class="form-group">
+                    <label for="user1">User 1</label>
+                    <select id="user1" name="user1" required>
+                        <option value="">Select user...</option>
+                        {% for u in users %}
+                            <option value="{{ u.username }}" {{ 'selected' if u.username == selected_user1 }}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <span class="vs-badge">VS</span>
+                <div class="form-group">
+                    <label for="user2">User 2</label>
+                    <select id="user2" name="user2" required>
+                        <option value="">Select user...</option>
+                        {% for u in users %}
+                            <option value="{{ u.username }}" {{ 'selected' if u.username == selected_user2 }}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Compare</button>
+            </div>
+        </form>
+
+        {% if stats1 and stats2 %}
+        <div class="comparison-table">
+            <div class="compare-row compare-header">
+                <div class="compare-cell user-cell">
+                    <div class="compare-avatar">{{ stats1.username[0] | upper }}</div>
+                    <strong>{{ stats1.username }}</strong>
+                </div>
+                <div class="compare-cell metric-cell">Metric</div>
+                <div class="compare-cell user-cell">
+                    <div class="compare-avatar">{{ stats2.username[0] | upper }}</div>
+                    <strong>{{ stats2.username }}</strong>
+                </div>
+            </div>
+
+            {% for metric, label in [
+                ('xp', 'Total XP'),
+                ('questions_solved', 'Problems Solved'),
+                ('accuracy', 'Accuracy %'),
+                ('streak', 'Best Streak'),
+                ('current_level', 'Level'),
+                ('correct_count', 'Correct Answers')
+            ] %}
+            <div class="compare-row">
+                <div class="compare-cell {{ 'winner' if stats1[metric] > stats2[metric] else '' }}">
+                    <span class="compare-value">{{ stats1[metric] }}</span>
+                </div>
+                <div class="compare-cell metric-cell">
+                    <span class="metric-label">{{ label }}</span>
+                </div>
+                <div class="compare-cell {{ 'winner' if stats2[metric] > stats1[metric] else '' }}">
+                    <span class="compare-value">{{ stats2[metric] }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not stats1 and selected_user1 %}
+            <div class="alert alert-error">User "{{ selected_user1 }}" not found.</div>
+        {% endif %}
+        {% if not stats2 and selected_user2 %}
+            <div class="alert alert-error">User "{{ selected_user2 }}" not found.</div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

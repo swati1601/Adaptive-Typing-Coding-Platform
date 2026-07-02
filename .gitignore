@@ -37,6 +37,6 @@ Thumbs.db
 *.log
 
 # ── Project specific ──────────────────────────────────────────────────────────
-static/
-templates/
+#static/
+#templates/
 .qoder/

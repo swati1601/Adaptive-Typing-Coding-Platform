@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import database as db
 
-# ── Paths ────────────────────────────────────────────────────────────────────
+#Paths
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
@@ -21,7 +21,7 @@ TEMPLATE_DIR = os.path.join(FRONTEND_DIR, "templates")
 STATIC_DIR   = os.path.join(FRONTEND_DIR, "static")
 DATA_DIR     = os.path.join(BASE_DIR, "data")
 
-# ── Load .env from project root ──────────────────────────────────────────────
+# Load .env from project root
 try:
     from dotenv import load_dotenv
     env_path = os.path.join(PROJECT_ROOT, ".env")
@@ -29,17 +29,26 @@ try:
 except ImportError:
     pass  # python-dotenv not installed, rely on system env vars
 
-# ── App ───────────────────────────────────────────────────────────────────────
-app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+# App 
+#app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+app = Flask(
+    __name__,
+    template_folder="../templates",
+    static_folder="../static"
+)
 app.secret_key = os.environ.get("SECRET_KEY", "codearena-dev-secret-key-change-in-prod")
 
-# ── Login Manager ─────────────────────────────────────────────────────────────
+#Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message_category = "info"
 
-# ── Load Questions ────────────────────────────────────────────────────────────
+# Load typing questions
+with open("data/typing_questions.json") as f:
+    typing_data = json.load(f)
+
+#Load Questions
 QUESTIONS_PATH = os.path.join(DATA_DIR, "coding_questions.json")
 with open(QUESTIONS_PATH) as f:
     CODING_QUESTIONS = json.load(f)
@@ -49,13 +58,13 @@ LEVELS = ["easy", "medium", "hard"]
 # Track which questions have been served per user (in-memory)
 _user_used_questions: dict = {}
 
-# ── Load Typing Sentences ───────────────────────────────────────────────────
+# Load Typing Sentences 
 TYPING_PATH = os.path.join(DATA_DIR, "typing_questions.json")
 with open(TYPING_PATH) as f:
     TYPING_SENTENCES = json.load(f)
 
 
-# ── User Model for Flask-Login ────────────────────────────────────────────────
+#User Model for Flask-Login 
 class User(UserMixin):
     def __init__(self, user_row):
         row = dict(user_row)
@@ -74,7 +83,7 @@ def load_user(user_id):
     return User(row)
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+#Helpers
 
 def get_used_questions(user_id: int, lang: str, level: str) -> set:
     key = f"{user_id}:{lang}:{level}"
@@ -93,7 +102,7 @@ def pick_question(user_id: int, lang: str, level: str):
     return q
 
 
-# ── Code Execution Runner ─────────────────────────────────────────────────────
+#Code Execution Runner
 
 def run_python_code(user_code: str, test_cases: list, timeout: int = 5) -> dict:
     """
@@ -145,7 +154,12 @@ print("__RESULTS__" + json.dumps(_out))
 
         results = json.loads(stdout.split("__RESULTS__")[1].strip())
         passed_count = sum(1 for r in results if r["passed"])
-        return {"results": results, "passed_count": passed_count, "error": None}
+
+        return {
+               "results": results,
+               "passed_count": passed_count,
+                "error": None
+       }
 
     except subprocess.TimeoutExpired:
         return {
@@ -170,14 +184,13 @@ print("__RESULTS__" + json.dumps(_out))
             pass
 
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
+#Router
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-# ── Auth ───────────────────────────────────────────────────────────────────────
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -240,7 +253,7 @@ def logout():
     return redirect(url_for("index"))
 
 
-# ── Coding / Adaptive Engine ───────────────────────────────────────────────────
+# Coding/adaptive
 
 @app.route("/coding")
 @login_required
@@ -315,7 +328,7 @@ def submit_code():
     time_taken = float(data.get("time_taken", 0))
     test_cases = data.get("test_cases", [])
 
-    # ── Execute code and determine correctness ──────────────────────────────
+    #Execute code and determine correctness 
     test_results = []
     runtime_error = None
 
@@ -332,7 +345,7 @@ def submit_code():
         passed_tests = 1 if correct else 0
         total_tests = 1
 
-    # ── XP calculation ────────────────────────────────────────────────────────
+    # XP calculation 
     if correct:
         xp_earned = 10
         if time_taken < 30:
@@ -342,16 +355,16 @@ def submit_code():
     else:
         xp_earned = 2        # attempt credit
 
-    # ── Record submission ─────────────────────────────────────────────────────
+    # Record submission
     db.add_submission(
         current_user.id, question, user_code,
         1 if correct else 0, language, time_taken, difficulty
     )
 
-    # ── Update skills ─────────────────────────────────────────────────────────
+    #Update skills
     db.update_skill(current_user.id, language, difficulty, correct)
 
-    # ── Update progress & adaptive level ──────────────────────────────────────
+    #Update progress & adaptive level
     new_level = db.update_progress(current_user.id, correct, xp_earned)
     progress  = db.get_progress(current_user.id)
 
@@ -368,18 +381,30 @@ def submit_code():
     })
 
 
-# ── Typing Engine ─────────────────────────────────────────────────────────────
+# Typing Engine
 
 @app.route("/get_text")
-@login_required
 def get_text():
-    progress = db.get_progress(current_user.id)
-    level = progress["current_level"]
-    pool = TYPING_SENTENCES.get(level, ["The quick brown fox jumps over the lazy dog."])
+
+    level = "easy"
+
+    if current_user.is_authenticated:
+        progress = db.get_progress(current_user.id)
+
+        if progress:
+            level = progress["current_level"]
+
+    pool = TYPING_SENTENCES.get(
+        level,
+        ["The quick brown fox jumps over the lazy dog."]
+    )
+
     text = random.choice(pool)
-    return jsonify({"text": text, "level": level})
 
-
+    return jsonify({
+        "text": text,
+        "level": level
+    })
 @app.route("/update_typing", methods=["POST"])
 @login_required
 def update_typing():
@@ -398,7 +423,7 @@ def update_typing():
     })
 
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
+# Dashboard
 
 @app.route("/dashboard")
 @login_required
@@ -422,7 +447,7 @@ def dashboard():
     )
 
 
-# ── Profile ────────────────────────────────────────────────────────────────────
+#Profile
 
 @app.route("/profile/<username>")
 def profile(username):
@@ -433,7 +458,7 @@ def profile(username):
     return render_template("profile.html", stats=stats)
 
 
-# ── Compare ────────────────────────────────────────────────────────────────────
+# Compare
 
 @app.route("/compare")
 def compare():
@@ -454,7 +479,7 @@ def compare():
     )
 
 
-# ── Leaderboard ────────────────────────────────────────────────────────────────
+# Leaderboard
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -462,10 +487,10 @@ def leaderboard():
     return render_template("leaderboard.html", leaderboard=board)
 
 
-# ── Initialize DB on import (safe to call multiple times) ─────────────────────
+# Initialize DB on import (safe to call multiple times)
 db.init_db()
 
-# ── Entry Point ────────────────────────────────────────────────────────────────
+#Entry Point
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

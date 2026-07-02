@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Typing Practice - CodeArena{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+    <div class="card" style="max-width:900px; margin:30px auto; padding:30px;">
+
+        <h1>⌨️ Typing Practice</h1>
+        <p>Improve your typing speed and accuracy.</p>
+
+        <div style="display:flex;gap:20px;margin:20px 0;flex-wrap:wrap;">
+
+            <div style="background:#2563eb;color:white;padding:10px 20px;border-radius:10px;">
+                ⏱ Timer:
+                <span id="timer">60</span>s
+            </div>
+
+            <div style="background:#16a34a;color:white;padding:10px 20px;border-radius:10px;">
+                ⚡ WPM:
+                <span id="wpm">0</span>
+            </div>
+
+            <div style="background:#dc2626;color:white;padding:10px 20px;border-radius:10px;">
+                🎯 Accuracy:
+                <span id="accuracy">0</span>%
+            </div>
+
+        </div>
+
+        <h3>
+            Level:
+            <span id="level">easy</span>
+        </h3>
+
+        <div id="text"
+             style="
+             background:#1e293b;
+             color:white;
+             padding:20px;
+             border-radius:10px;
+             margin:20px 0;
+             font-size:24px;
+             line-height:1.8;">
+        </div>
+
+        <textarea id="input"
+                  rows="5"
+                  style="
+                  width:100%;
+                  padding:15px;
+                  font-size:20px;
+                  border-radius:8px;
+                  border:2px solid #2563eb;">
+        </textarea>
+
+        <br><br>
+
+        <button class="btn btn-primary"
+                onclick="checkTyping()">
+            Submit
+        </button>
+
+        <h3 id="result"></h3>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='typing.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,53 @@
+frontend/src/components/TypingPractice.tsx <<'EOF'
+/* filepath: frontend/src/components/TypingPractice.tsx */
+import React, { useEffect, useState } from "react";
+import questions from "../data/typing_questions.json";
+
+export default function TypingPractice() {
+  const [level] = useState<"easy" | "medium" | "hard">("easy");
+  const list = questions[level] || [];
+  const [idx, setIdx] = useState(0);
+  const [input, setInput] = useState("");
+  const [start, setStart] = useState<number | null>(null);
+  const [end, setEnd] = useState<number | null>(null);
+
+  const target = list[idx] || "";
+
+  useEffect(() => {
+    if (input.length === 1 && start === null) setStart(Date.now());
+    if (target && input === target) setEnd(Date.now());
+  }, [input, target, start]);
+
+  const reset = () => {
+    if (list.length === 0) return;
+    setIdx((i) => (i + 1) % list.length);
+    setInput("");
+    setStart(null);
+    setEnd(null);
+  }
+;
+const wpm = (() => {
+    if (!start || !end) return 0;
+    const minutes = (end - start) / 60000;
+    const correctChars = target.split("").filter((c, i) => input[i] === c).length;
+    return minutes > 0 ? Math.round((correctChars / 5) / minutes) : 0;
+  })();
+
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: 16 }}>
+      <h3>Typing practice — {level}</h3>
+      <p style={{ whiteSpace: "pre-wrap", fontSize: 18 }}>{target}</p>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Start typing..."
+        style={{ width: "100%", padding: 8, fontSize: 16 }}
+      />
+      <div style={{ marginTop: 8 }}>
+        <button onClick={reset}>Next</button>
+        <span style={{ marginLeft: 12 }}>WPM: {wpm}</span>
+        <span style={{ marginLeft: 12 }}>Progress: {input.length}/{target.length}</span>
+      </div>
+    </div>
+  );
+}

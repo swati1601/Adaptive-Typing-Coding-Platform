@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+{% block title %}Practice - CodeArena{% endblock %}
+
+{% block content %}
+<section class="coding-section">
+    <div class="coding-layout">
+        <!-- Left Panel: Question -->
+        <div class="question-panel">
+            <div class="question-header">
+                <div class="question-meta">
+                    <span id="difficultyBadge" class="badge badge-easy">Easy</span>
+                    <span id="langBadge" class="badge badge-lang">Python</span>
+                </div>
+                <div class="question-timer">
+                    <span class="timer-icon">&#9202;</span>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
+
+            <h2 id="questionTitle" class="question-title">Loading question...</h2>
+            <p id="questionDesc" class="question-desc"></p>
+
+            <!-- Function Signature -->
+            <div id="signatureBox" class="signature-box" style="display:none;">
+                <span class="sig-label">Function Signature:</span>
+                <code id="functionSig" class="sig-code"></code>
+            </div>
+
+            <!-- Example Test Cases (LeetCode style) -->
+            <div id="examplesBox" class="examples-box" style="display:none;">
+                <span class="examples-label">Examples:</span>
+                <div id="examplesList" class="examples-list"></div>
+            </div>
+
+            <div class="hint-section">
+                <button class="hint-toggle" onclick="toggleHint()">&#128161; Show Hint</button>
+                <p id="questionHint" class="hint-text" style="display:none;"></p>
+            </div>
+
+            <div class="question-stats-bar">
+                <span id="streakInfo" class="stat-chip">🔥 Streak: 0</span>
+                <span id="xpInfo" class="stat-chip">⭐ XP: 0</span>
+                <span id="levelInfo" class="stat-chip">📊 Level: Easy</span>
+            </div>
+
+            <!-- Result area -->
+            <div id="resultArea" class="result-area" style="display:none;">
+                <div id="resultIcon" class="result-icon"></div>
+                <div id="resultText" class="result-text"></div>
+                <div id="resultXP" class="result-xp"></div>
+            </div>
+
+            <button id="nextBtn" class="btn btn-primary btn-block" style="display:none;" onclick="loadNextQuestion()">
+                Next Question &#8594;
+            </button>
+        </div>
+
+        <!-- Right Panel: Editor + Test Results -->
+        <div class="editor-panel">
+            <div class="editor-toolbar">
+                <select id="languageSelect" onchange="changeLanguage()">
+                    <option value="python">🐍 Python</option>
+                    <option value="c">⚙ C</option>
+                    <option value="java">☕ Java</option>
+                </select>
+                <div class="editor-actions">
+                    <button class="btn btn-outline btn-sm" onclick="resetEditor()">Reset</button>
+                    <button class="btn btn-secondary btn-sm" id="runBtn" onclick="runTests()">
+                        ▶ Run Tests
+                    </button>
+                    <button class="btn btn-success btn-sm" id="submitBtn" onclick="submitCode()">Submit</button>
+                </div>
+            </div>
+
+            <div class="code-editor-wrap">
+                <div class="line-numbers" id="lineNumbers">1</div>
+                <textarea
+                    id="codeEditor"
+                    class="code-editor"
+                    placeholder="Write your solution here..."
+                    spellcheck="false"
+                    oninput="updateLineNumbers()"
+                    onkeydown="handleTab(event)"
+                ></textarea>
+            </div>
+
+            <!-- Test Results Panel -->
+            <div id="testResultsPanel" class="test-results-panel" style="display:none;">
+                <div class="test-results-header">
+                    <span id="testResultsTitle">Test Results</span>
+                    <span id="testResultsSummary" class="test-summary"></span>
+                </div>
+                <div id="testResultsList" class="test-results-list"></div>
+                <div id="runtimeErrorBox" class="runtime-error" style="display:none;"></div>
+            </div>
+
+            <!-- Submission history -->
+            <div class="submission-history">
+                <h3>Recent Submissions</h3>
+                <div id="attemptsList" class="attempts-list">
+                    <p class="no-attempts">No submissions yet. Write code and submit!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentQuestion = null;
+    let timerInterval = null;
+    let seconds = 0;
+    let attempts = [];
+
+    // Timer
+    function startTimer() {
+        clearInterval(timerInterval);
+        seconds = 0;
+        document.getElementById('timer').textContent = '00:00';
+        timerInterval = setInterval(() => {
+            seconds++;
+            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            document.getElementById('timer').textContent = `${m}:${s}`;
+        }, 1000);
+    }
+
+    //Line Numbers 
+    function updateLineNumbers() {
+        const lines = document.getElementById('codeEditor').value.split('\n').length;
+        const nums = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+        document.getElementById('lineNumbers').textContent = nums;
+    }
+
+    // Tab support in editor 
+    function handleTab(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const ta = e.target;
+            const start = ta.selectionStart;
+            const end = ta.selectionEnd;
+            ta.value = ta.value.substring(0, start) + '    ' + ta.value.substring(end);
+            ta.selectionStart = ta.selectionEnd = start + 4;
+            updateLineNumbers();
+        }
+    }
+
+    // UI helpers 
+    function toggleHint() {
+        const hint = document.getElementById('questionHint');
+        hint.style.display = hint.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function resetEditor() {
+    if (currentQuestion && currentQuestion.starter_code) {
+        document.getElementById('codeEditor').value =
+            currentQuestion.starter_code;
+    } else {
+        document.getElementById('codeEditor').value = '';
+    }
+
+    updateLineNumbers();
+    document.getElementById('testResultsPanel').style.display = 'none';
+}
+
+    // Render example test cases (LeetCode style) 
+    function renderExamples(testCases) {
+        const box = document.getElementById('examplesBox');
+        const list = document.getElementById('examplesList');
+        if (!testCases || testCases.length === 0) {
+            box.style.display = 'none';
+            return;
+        }
+        box.style.display = 'block';
+        // Show first 3 test cases as examples (hide expected for run-only tests))        const show = testCases.slice(0, 3);
+        list.innerHTML = show.map((tc, i) => `
+            <div class="example-item">
+                <span class="example-label">Example ${i + 1}:</span>
+                <div class="example-content">
+                    <span class="example-input"><b>Input:</b> <code>${escHtml(tc.input)}</code></span>
+                    <span class="example-expected"><b>Expected:</b> <code>${escHtml(tc.expected)}</code></span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function escHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Render test results panel 
+    function renderTestResults(data) {
+        const panel = document.getElementById('testResultsPanel');
+        const list = document.getElementById('testResultsList');
+        const summary = document.getElementById('testResultsSummary');
+        const errBox = document.getElementById('runtimeErrorBox');
+
+        panel.style.display = 'block';
+        errBox.style.display = 'none';
+
+        const results = data.test_results || data.results || [];
+        const passed = data.passed_tests || (data.passed_count || 0);
+        const total = data.total_tests || results.length;
+
+        document.getElementById('testResultsTitle').textContent = `Test Results`;
+        summary.textContent = `${passed}/${total} passed`;
+        summary.className = `test-summary ${passed === total && total > 0 ? 'all-passed' : 'some-failed'}`;
+
+        if (data.runtime_error && !results.some(r => r.actual !== null)) {
+            errBox.style.display = 'block';
+            errBox.textContent = '⚠ ' + data.runtime_error;
+        }
+
+        if (results.length === 0) {
+            list.innerHTML = '<p class="no-results-msg">No test results available.</p>';
+            return;
+        }
+
+        list.innerHTML = results.map((r, i) => {
+            const passed = r.passed;
+            const icon = passed ? '✓' : '✗';
+            const cls = passed ? 'tc-passed' : 'tc-failed';
+            const tc = (currentQuestion && currentQuestion.test_cases[i]) || {};
+            const inputStr = tc.input || `Test ${i+1}`;
+            const expectedStr = r.expected || tc.expected || '?';
+            const actualStr = r.actual !== null && r.actual !== undefined ? r.actual : (r.error || 'Error');
+            return `
+                <div class="tc-row ${cls}">
+                    <div class="tc-status">${icon}</div>
+                    <div class="tc-details">
+                        <div class="tc-input"><b>Input:</b> <code>${escHtml(inputStr)}</code></div>
+                        <div class="tc-expected"><b>Expected:</b> <code>${escHtml(expectedStr)}</code></div>
+                        <div class="tc-actual"><b>Output:</b> <code>${escHtml(actualStr)}</code></div>
+                        ${r.error && r.actual !== null ? `<div class="tc-error"><b>Error:</b> ${escHtml(r.error)}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    //Load Next Question 
+    function loadNextQuestion() {
+        document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('runBtn').disabled = false;
+        document.getElementById('testResultsPanel').style.display = 'none';
+        startTimer();
+
+        const lang = document.getElementById('languageSelect').value;
+        fetch(`/api/next_question?lang=${lang}`)
+            .then(r => r.json())
+            .then(data => {
+                currentQuestion = data;
+                document.getElementById('questionTitle').textContent = data.question;
+                document.getElementById('questionDesc').textContent = data.description || '';
+                document.getElementById('questionHint').textContent = data.hint || '';
+                document.getElementById('questionHint').style.display = 'none';
+
+                // Function signature
+                const sigBox = document.getElementById('signatureBox');
+                if (data.function_signature) {
+                    sigBox.style.display = 'block';
+                    document.getElementById('functionSig').textContent = data.function_signature;
+                } else {
+                    sigBox.style.display = 'none';
+                }
+
+                // Example test cases
+                renderExamples(data.test_cases);
+
+                // Pre-fill starter code
+                const editor = document.getElementById('codeEditor');
+                editor.value = data.starter_code || '';
+                updateLineNumbers();
+
+                // Badges & stats
+                const badge = document.getElementById('difficultyBadge');
+                badge.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                badge.className = `badge badge-${data.difficulty}`;
+
+                document.getElementById('levelInfo').textContent = `📊 Level: ${data.current_level}`;
+                document.getElementById('xpInfo').textContent = `⭐ XP: ${data.xp}`;
+                document.getElementById('streakInfo').textContent = `🔥 Streak: ${data.streak}`;
+            })
+            .catch(err => {
+                document.getElementById('questionTitle').textContent = 'Error loading question';
+                console.error(err);
+            });
+    }
+
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+        document.getElementById('langBadge').textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+        loadNextQuestion();
+    }
+
+    //  Run Tests (without submitting) 
+    function runTests() {
+        const code = document.getElementById('codeEditor').value.trim();
+        if (!code) { alert('Please write some code first!'); return; }
+        if (!currentQuestion || !currentQuestion.test_cases || currentQuestion.test_cases.length === 0) {
+            alert('No test cases available for this question.');
+            return;
+        }
+
+        const btn = document.getElementById('runBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Running...';
+
+        const lang = document.getElementById('languageSelect').value;
+        fetch('/api/run_tests', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                code: code,
+                language: lang,
+                test_cases: currentQuestion.test_cases
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            renderTestResults({
+                test_results: data.results || [],
+                passed_tests: data.passed_count || 0,
+                total_tests: currentQuestion.test_cases.length,
+                runtime_error: data.error
+            });
+        })
+        .catch(err => {
+            alert('Error running tests. Please try again.');
+            console.error(err);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = '▶ Run Tests';
+        });
+    }
+
+    // ── Submit Code ─────────────────────────────────────────────────────────────
+    function submitCode() {
+        const code = document.getElementById('codeEditor').value.trim();
+        if (!code) { alert('Please write some code first!'); return; }
+
+        clearInterval(timerInterval);
+        document.getElementById('submitBtn').disabled = true;
+
+        const lang = document.getElementById('languageSelect').value;
+        const testCases = (currentQuestion && currentQuestion.test_cases) || [];
+
+        fetch('/api/submit_code', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                code: code,
+                answer: currentQuestion ? currentQuestion.answer : '',
+                question: currentQuestion ? currentQuestion.question : '',
+                language: lang,
+                difficulty: currentQuestion ? currentQuestion.difficulty : 'easy',
+                time_taken: seconds,
+                test_cases: testCases
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            // Show overall result
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'flex';
+
+            const isCorrect = data.result === 'Correct';
+            document.getElementById('resultIcon').innerHTML = isCorrect ? '&#10003;' : '&#10007;';
+            document.getElementById('resultIcon').className = `result-icon ${isCorrect ? 'correct' : 'wrong'}`;
+            
+            const passedInfo = data.total_tests ? ` (${data.passed_tests}/${data.total_tests} tests passed)` : '';
+            document.getElementById('resultText').textContent = 
+                (isCorrect ? 'Accepted!' : 'Wrong Answer') + passedInfo;
+            document.getElementById('resultXP').textContent = 
+                `+${data.xp_earned} XP  |  Level: ${data.new_level}`;
+
+            // Show test results panel
+            renderTestResults(data);
+
+            // Add to attempts
+            attempts.unshift({
+                question: currentQuestion ? currentQuestion.question : '',
+                correct: isCorrect,
+                time: seconds,
+                passed: data.passed_tests || 0,
+                total: data.total_tests || 0
+            });
+            renderAttempts();
+
+            // Update stats
+            document.getElementById('levelInfo').textContent = `📊 Level: ${data.new_level}`;
+            document.getElementById('xpInfo').textContent = `⭐ XP: ${data.new_xp}`;
+            document.getElementById('streakInfo').textContent = `🔥 Streak: ${data.streak}`;
+
+            // Update badge
+            const badge = document.getElementById('difficultyBadge');
+            badge.textContent = data.new_level.charAt(0).toUpperCase() + data.new_level.slice(1);
+            badge.className = `badge badge-${data.new_level}`;
+
+            document.getElementById('nextBtn').style.display = 'block';
+        })
+        .catch(err => {
+            alert('Error submitting code. Please try again.');
+            console.error(err);
+            document.getElementById('submitBtn').disabled = false;
+        });
+    }
+
+    function renderAttempts() {
+        const list = document.getElementById('attemptsList');
+        if (attempts.length === 0) {
+            list.innerHTML = '<p class="no-attempts">No submissions yet.</p>';
+            return;
+        }
+        list.innerHTML = attempts.slice(0, 10).map(a => {
+            const testInfo = a.total > 0 ? ` (${a.passed}/${a.total})` : '';
+            return `
+                <div class="attempt-item ${a.correct ? 'attempt-correct' : 'attempt-wrong'}">
+                    <span class="attempt-status">${a.correct ? '✓' : '✗'}</span>
+                    <span class="attempt-question">${escHtml(a.question)}${testInfo}</span>
+                    <span class="attempt-time">${a.time}s</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Init 
+    window.addEventListener('DOMContentLoaded', () => {
+        loadNextQuestion();
+    });
+</script>
+{% endblock %}

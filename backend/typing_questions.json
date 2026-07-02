@@ -1,0 +1,17 @@
+{
+    "easy": [
+        "Python is easy to learn.",
+        "Practice typing every day.",
+        "Coding improves logic."
+    ],
+
+    "medium": [
+        "Data structures improve programming skills.",
+        "Algorithms solve complex problems."
+    ],
+
+    "hard": [
+        "Adaptive systems adjust difficulty automatically.",
+        "Artificial intelligence improves learning."
+    ]
+}

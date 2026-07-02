@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}
+CodeArena - Adaptive Coding Platform
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero">
+    <div class="hero-container">
+
+        <div class="hero-text">
+
+            <span class="hero-badge">
+                Adaptive Difficulty • Real-time Stats
+            </span>
+
+            <h1>
+                Master Coding<br>
+                <span class="gradient-text">
+                    One Problem at a Time
+                </span>
+            </h1>
+
+            <p class="hero-desc">
+                CodeArena adapts to your skill level in real-time.
+                Solve coding problems, practice typing, track your
+                progress, and compete with others.
+            </p>
+
+            <div class="hero-cta">
+
+                {% if current_user.is_authenticated %}
+
+                    <a href="/coding"
+                       class="btn btn-primary btn-lg">
+                        Coding Practice
+                    </a>
+
+                    <a href="/typing"
+                       class="btn btn-outline btn-lg">
+                        Typing Practice
+                    </a>
+
+                    <a href="/dashboard"
+                       class="btn btn-outline btn-lg">
+                        Dashboard
+                    </a>
+
+                {% else %}
+
+                    <a href="/register"
+                       class="btn btn-primary btn-lg">
+                        Get Started Free
+                    </a>
+
+                    <a href="/login"
+                       class="btn btn-outline btn-lg">
+                        Login
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="hero-visual">
+
+            <div class="code-card">
+
+                <div class="code-card-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+
+                    <span class="filename">
+                        solution.py
+                    </span>
+                </div>
+
+                <pre class="code-card-body"><code>
+def twoSum(nums, target):
+
+    seen = {}
+
+    for i, n in enumerate(nums):
+
+        if target - n in seen:
+            return [seen[target - n], i]
+
+        seen[n] = i
+                </code></pre>
+
+                <div class="code-card-footer">
+                    <span class="status accepted">
+                        ✓ Accepted
+                    </span>
+
+                    <span class="runtime">
+                        Runtime: 42ms
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- FEATURES -->
+
+<section class="features">
+
+    <div class="section-container">
+
+        <h2 class="section-title">
+            Why CodeArena?
+        </h2>
+
+        <p class="section-subtitle">
+            Everything you need to improve your coding skills.
+        </p>
+
+        <div class="features-grid">
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+
+                <h3>Adaptive Difficulty</h3>
+
+                <p>
+                    Questions automatically adjust according
+                    to your performance.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+
+                <h3>Progress Tracking</h3>
+
+                <p>
+                    Track XP, accuracy, streaks, and solved problems.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+
+                <h3>Leaderboard</h3>
+
+                <p>
+                    Compete with other users and climb rankings.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💻</div>
+
+                <h3>Coding Practice</h3>
+
+                <p>
+                    Solve coding problems in Python, C, and Java.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⌨️</div>
+
+                <h3>Typing Practice</h3>
+
+                <p>
+                    Improve typing speed and accuracy.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+
+                <h3>Fast Evaluation</h3>
+
+                <p>
+                    Test cases evaluate your solutions instantly.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how-it-works">
+
+    <div class="section-container">
+
+        <h2 class="section-title">
+            How It Works
+        </h2>
+
+        <div class="steps">
+
+            <div class="step">
+                <div class="step-number">1</div>
+
+                <h3>Register</h3>
+
+                <p>Create your account.</p>
+            </div>
+
+            <div class="step-arrow">→</div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+
+                <h3>Solve Problems</h3>
+
+                <p>Practice coding and typing questions.</p>
+            </div>
+
+            <div class="step-arrow">→</div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+
+                <h3>Level Up</h3>
+
+                <p>
+                    Solve 3 consecutive questions correctly
+                    to move to the next level.
+                </p>
+            </div>
+
+            <div class="step-arrow">→</div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+
+                <h3>Compete</h3>
+
+                <p>
+                    Earn XP and climb the leaderboard.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
